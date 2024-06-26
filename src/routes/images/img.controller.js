@@ -6,7 +6,7 @@ const Negocio = require('../../models/business.model')
 const Imagen = require('../../models/image.model')
 const Trabajador = require('../../models/worker.model')
 
-const { uploadFile } = require('../../../s3')
+const { uploadFile, downloadFile } = require('../../../s3')
 
 function randomImageName() {
   const longitudName = 15
@@ -65,7 +65,7 @@ async function uploadImageInside(image,identificador,destiny) {
     await fs.writeFile(rutaAlmacenamiento, bufferImg)
     const ruta = await uploadFile(rutaAlmacenamiento,nameFile)
     await fs.unlink(rutaAlmacenamiento)
-    const imagen = new Imagen({ imgNombre: nameFile, imgRuta: ruta })
+    const imagen = new Imagen({ imgNombre: nameFile, imgRuta: rutaAlmacenamiento })
     await imagen.save()
 
     const id = identificador
@@ -85,8 +85,9 @@ async function downloadImage(req, res) {
     console.log('Te vamos a intentar enviar una imagen')
     let idImagen = req.get('id')
 
-    await Imagen.findById(idImagen).then((docs) => {
+    await Imagen.findById(idImagen).then( async (docs) => {
       console.log('Estamos intentado encontrar tu imagen')
+      await downloadFile(docs.imgNombre, docs.imgRuta)
       const rutaAlmacenamiento = docs.imgRuta
       const dir = __dirname.substring(0, __dirname.length - 17)
       const ruta = dir + rutaAlmacenamiento
@@ -97,6 +98,7 @@ async function downloadImage(req, res) {
       console.log('Convertida, te la vamos a enviar')
       //console.log(file);
       return res.status(200).send(file)
+
     })
   } catch (e) {
     console.log(e)

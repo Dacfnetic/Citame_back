@@ -24,7 +24,28 @@ async function uploadFile(file, nombre){
     return result.ETag;
 }
 
+async function getFiles()
+{
+    const command = new S3.ListObjectsCommand({
+        Bucket: configuracion.AWS_BUCKET_NAME
+    })
+    const result = await client.send(command)
+}
+
+async function downloadFile(nombre, ruta)
+{
+    const command = new S3.GetObjectCommand({
+        Bucket: configuracion.AWS_BUCKET_NAME,
+        Key: nombre
+    })
+    const result = await client.send(command)
+    console.log(result)
+    result.Body.pipe(fs.createWriteStream(ruta))
+}
+
 module.exports = {
-    uploadFile
+    uploadFile,
+    getFiles,
+    downloadFile
   }
 
