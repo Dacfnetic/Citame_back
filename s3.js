@@ -39,7 +39,7 @@ async function downloadFile(nombre, ruta)
         Key: nombre
     })
     const result = await client.send(command)
-    console.log(result)
+    //console.log(result)
     result.Body.pipe(fs.createWriteStream(ruta))
 }
 

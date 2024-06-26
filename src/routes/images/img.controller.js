@@ -89,8 +89,8 @@ async function downloadImage(req, res) {
       console.log('Estamos intentado encontrar tu imagen')
       const rutaAlmacenamiento = docs.imgRuta
       await downloadFile(docs.imgNombre, docs.imgRuta).then(
-        async (data)=>{
-          console.log('paso 1')
+      async (data)=>{
+      console.log('paso 1')
       //const dir = __dirname.substring(0, __dirname.length - 17)
       //const ruta = dir + rutaAlmacenamiento
       //console.log(dir);
