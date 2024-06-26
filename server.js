@@ -13,7 +13,7 @@ const { setTimeout } = require('timers')
 
 const server = http.createServer(app)
 const io = new Server(server)
-const PORT = process.env.PORT || 80
+const PORT = process.env.PORT || 8080
 const usuariosConectados = new Set()
 const listaDeSocketConCorreo = {}
 const arrayNegocios = []
