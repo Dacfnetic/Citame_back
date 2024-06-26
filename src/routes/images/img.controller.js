@@ -5,6 +5,7 @@ const redis = require('redis')
 const Negocio = require('../../models/business.model')
 const Imagen = require('../../models/image.model')
 const Trabajador = require('../../models/worker.model')
+
 const { uploadFile } = require('../../../s3')
 
 function randomImageName() {
@@ -56,16 +57,15 @@ async function uploadImageInside(image,identificador,destiny) {
     const nameImg = randomImageName()
     const nameFile = `img_${nameImg}_${Date.now()}.png`
 
-    const rutaAlmacenamiento = `~/projects/Citame_back/temp/${nameFile}`
+    const rutaAlmacenamiento = `~/projects/Citame_back/temporal/${nameFile}`
 
-    //const rutaAlmacenamiento = `temp/${nameFile}`
+    //const rutaAlmacenamiento = `temporal/${nameFile}`
 
 
     await fs.writeFile(rutaAlmacenamiento, bufferImg)
-
-    uploadFile()
-
-    const imagen = new Imagen({ imgNombre: nameFile, imgRuta: rutaAlmacenamiento })
+    const ruta = await uploadFile(rutaAlmacenamiento,nameFile)
+    await fs.unlink(rutaAlmacenamiento)
+    const imagen = new Imagen({ imgNombre: nameFile, imgRuta: ruta })
     await imagen.save()
 
     const id = identificador

@@ -10,8 +10,8 @@ const client = new S3.S3Client({
     }
 })
 
-export async function uploadFile(file, nombre){
-    const stream = fs.createReadStream(file);
+async function uploadFile(file, nombre){
+    const stream = fs.createReadStream(file)
     const uploadParams = {
         Bucket: configuracion.AWS_BUCKET_NAME,
         Key: nombre,
@@ -21,5 +21,10 @@ export async function uploadFile(file, nombre){
 
     const result = await client.send(command);
     console.log(result);
+    return result.ETag;
 }
+
+module.exports = {
+    uploadFile
+  }
 
