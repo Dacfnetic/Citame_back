@@ -87,8 +87,9 @@ async function downloadImage(req, res) {
 
     await Imagen.findById(idImagen).then( async (docs) => {
       console.log('Estamos intentado encontrar tu imagen')
-      await downloadFile(docs.imgNombre, docs.imgRuta)
-      const rutaAlmacenamiento = docs.imgRuta
+      await downloadFile(docs.imgNombre, docs.imgRuta).then(
+        (data)=>{
+          const rutaAlmacenamiento = docs.imgRuta
       //const dir = __dirname.substring(0, __dirname.length - 17)
       //const ruta = dir + rutaAlmacenamiento
       //console.log(dir);
@@ -100,7 +101,16 @@ async function downloadImage(req, res) {
       console.log(imagenConvertidad);
       console.log('Convertida, te la vamos a enviar')
       //console.log(file);
-      return res.status(200).send(file)
+      
+
+        }
+      ).then(async (datos)=> {
+        await fs.unlink(rutaAlmacenamiento).then((datitos) => {
+          return res.status(200).send(file)
+        })
+        
+      })
+      
 
     })
   } catch (e) {
