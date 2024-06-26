@@ -56,9 +56,9 @@ async function uploadImageInside(image,identificador,destiny) {
     const nameImg = randomImageName()
     const nameFile = `img_${nameImg}_${Date.now()}.png`
 
-    const rutaAlmacenamiento = `~/projects/Citame_back/src/img_CitaMe/${nameFile}`
+    const rutaAlmacenamiento = `~/projects/Citame_back/temp/${nameFile}`
 
-    
+    //const rutaAlmacenamiento = `temp/${nameFile}`
 
 
     await fs.writeFile(rutaAlmacenamiento, bufferImg)
