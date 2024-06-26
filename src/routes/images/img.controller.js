@@ -91,6 +91,8 @@ async function downloadImage(req, res) {
       const rutaAlmacenamiento = docs.imgRuta
       const dir = __dirname.substring(0, __dirname.length - 17)
       const ruta = dir + rutaAlmacenamiento
+      console.log(dir);
+      console.log(ruta);
       console.log('La encontramos, la vamos a convertir a lista de enteros')
       const file = fss.readFileSync(ruta)
       const imagenConvertidad = JSON.stringify(file)
