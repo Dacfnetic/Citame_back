@@ -87,9 +87,10 @@ async function downloadImage(req, res) {
 
     await Imagen.findById(idImagen).then( async (docs) => {
       console.log('Estamos intentado encontrar tu imagen')
+      const rutaAlmacenamiento = docs.imgRuta
       await downloadFile(docs.imgNombre, docs.imgRuta).then(
         (data)=>{
-          const rutaAlmacenamiento = docs.imgRuta
+          console.log('paso 1')
       //const dir = __dirname.substring(0, __dirname.length - 17)
       //const ruta = dir + rutaAlmacenamiento
       //console.log(dir);
@@ -105,7 +106,9 @@ async function downloadImage(req, res) {
 
         }
       ).then(async (datos)=> {
+        console.log('paso 2')
         await fs.unlink(rutaAlmacenamiento).then((datitos) => {
+          console.log('paso 3')
           return res.status(200).send(file)
         })
         
