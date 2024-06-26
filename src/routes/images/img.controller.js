@@ -89,14 +89,15 @@ async function downloadImage(req, res) {
       console.log('Estamos intentado encontrar tu imagen')
       await downloadFile(docs.imgNombre, docs.imgRuta)
       const rutaAlmacenamiento = docs.imgRuta
-      const dir = __dirname.substring(0, __dirname.length - 17)
-      const ruta = dir + rutaAlmacenamiento
-      console.log(dir);
-      console.log(ruta);
+      //const dir = __dirname.substring(0, __dirname.length - 17)
+      //const ruta = dir + rutaAlmacenamiento
+      //console.log(dir);
+      //console.log(ruta);
       console.log('La encontramos, la vamos a convertir a lista de enteros')
-      const file = fss.readFileSync(ruta)
+      //const file = fss.readFileSync(ruta)
+      const file = fss.readFileSync(rutaAlmacenamiento)
       const imagenConvertidad = JSON.stringify(file)
-      //console.log(imagenConvertidad);
+      console.log(imagenConvertidad);
       console.log('Convertida, te la vamos a enviar')
       //console.log(file);
       return res.status(200).send(file)
