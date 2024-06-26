@@ -48,6 +48,32 @@ async function uploadImage(req, res) {
   }
 }
 
+async function uploadImageInside(image,identificador,destiny) {
+  try {
+    const bufferImg = await sharp(image.buffer).resize({ width: 300, height: 300 }).toBuffer()
+
+    const nameImg = randomImageName()
+    const nameFile = `img_${nameImg}_${Date.now()}.png`
+
+    const rutaAlmacenamiento = `src/img_CitaMe/${nameFile}`
+
+    await fs.writeFile(rutaAlmacenamiento, bufferImg)
+
+    const imagen = new Imagen({ imgNombre: nameFile, imgRuta: rutaAlmacenamiento })
+    await imagen.save()
+
+    const id = identificador
+    if (destiny == 'business') {
+      await Negocio.findByIdAndUpdate(id, { $push: { imgPath: imagen._id } })    
+    }
+    if (destiny == 'worker') {
+      await Trabajador.findByIdAndUpdate(id, { $push: { imgPath: imagen._id } })
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+
 async function downloadImage(req, res) {
   try {
     console.log('Te vamos a intentar enviar una imagen')
@@ -139,6 +165,7 @@ async function deleteImage(req, res) {
 
 module.exports = {
   uploadImage,
+  uploadImageInside,
   downloadImage,
   deleteImage,
   randomImageName,
