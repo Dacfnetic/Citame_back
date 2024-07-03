@@ -11,6 +11,7 @@ const userSchema = new Schema({
   deviceTokens: [{ type: String, required: true }],
   //favoriteBusiness:[{type: mongoose.Schema.Types.Mixed}],
   favoriteBusiness: [{ type: Schema.Types.ObjectId, ref: 'business' }],
+  ownerBusiness: [{ type: Schema.Types.ObjectId, ref: 'business' }],
   citas: [{ type: Schema.Types.ObjectId, ref: 'cita' }],
   //status:{type:Boolean},
   //bussinessAsOwner: [String],

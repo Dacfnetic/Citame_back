@@ -55,11 +55,10 @@ async function getOwnerBusiness(req, res) {
     usuario
       .findOne({ emailUser: req.get('email') })
       .then(async (docs) => {
-        if (docs.emailUser == req.get('email')) {
           const ownerBusiness = await business.find({ createdBy: docs._id })
           console.log('Ya tenemos la lista de negocios del usuario')
           const comprob = req.get('estado')
-          if (comprob == '1') {
+          if (comprob != '1') {
             console.log('Como no habian cambios no te enviamos nada')
             return res.status(200).send('1')
           }
@@ -67,7 +66,6 @@ async function getOwnerBusiness(req, res) {
             'Ahora te vamos a enviar los negocios del usuario, luego te envio las imagenes',
           )
           return res.status(201).json(ownerBusiness)
-        }
       })
       .catch((e) => console.log(e))
   } catch (e) {
@@ -75,30 +73,16 @@ async function getOwnerBusiness(req, res) {
   }
 }
 async function verifyOwnerBusiness(req, res) {
-  console.log('Verificando si los negocios del usuario han cambiado')
   contadorDeVerifyOwnerBusiness++
   console.log('verifyOwnerBusiness: ' + contadorDeVerifyOwnerBusiness)
   try {
     usuario
-      .findOne({ emailUser: req.body.email })
+      .findOne({ emailUser: req.get('email') })
       .then(async (docs) => {
-        if (docs.emailUser == req.body.email) {
-          const ownerBusiness = await business.find({ createdBy: docs._id })
-          if (ownerBusiness.length != 0) {
-            listaDeNombres = ownerBusiness.map((busi) => busi.businessName)
-            listaDeNombresOrdenada = listaDeNombres.sort(function (a, b) {
-              return b - a
-            })
-            nombresRecibidos = req.body.businessName
-            listaRecibidaOrdenada = nombresRecibidos.sort(function (a, b) {
-              return b - a
-            })
-            if (JSON.stringify(listaRecibidaOrdenada) === JSON.stringify(listaDeNombresOrdenada)) {
-              return res.status(201).send('1')
-            }
+          if (docs.ownerBusiness.length != 0) {
+              return res.status(200).send('1')
           }
           return res.status(201).send('0')
-        }
       })
       .catch((e) => console.log(e))
   } catch (e) {
@@ -129,7 +113,7 @@ async function postBusiness(req, res) {
     if (existe) return res.status(202).send('El negocio ya existe')
     /* #endregion */
 
-    await usuario.findOne({ emailUser: req.body.email }).then(async (docs) => {
+    await usuario.findOneAndUpdate({ emailUser: req.body.email }).then(async (docs) => {
 
       const nuevo = new business({
         businessName: req.body.businessName,
@@ -145,10 +129,19 @@ async function postBusiness(req, res) {
         servicios: req.body.servicios,
       })
       await nuevo.save()
+      item = JSON.parse(JSON.stringify(docs.ownerBusiness))
+      item.push(nuevo._id)
+      const mod = { ownerBusiness: item }
 
-      uploadImageInside(req.file, nuevo.id, req.body.destiny);
+      await usuario.findByIdAndUpdate(docs._id, { $set: mod }).then((data)=>{
+        docs.ownerBusiness.push(nuevo.id);
+
+        uploadImageInside(req.file, nuevo.id, req.body.destiny);
       
-      return res.status(201).json(nuevo)
+        return res.status(201).json(nuevo)
+      })
+
+      
     })
   } catch (e) {
     console.log(e)

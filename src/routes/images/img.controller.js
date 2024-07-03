@@ -57,14 +57,14 @@ async function uploadImageInside(image,identificador,destiny) {
     const nameImg = randomImageName()
     const nameFile = `img_${nameImg}_${Date.now()}.png`
 
-    const rutaAlmacenamiento = `/home/ubuntu/projects/Citame_back/temporal/${nameFile}`
-
-    //const rutaAlmacenamiento = `temporal/${nameFile}`
+    //const rutaAlmacenamiento = `/home/ubuntu/projects/Citame_back/temporal/${nameFile}`
+    const rutaAlmacenamiento = `src/img_CitaMe/${nameFile}`
+    
 
 
     await fs.writeFile(rutaAlmacenamiento, bufferImg)
-    const ruta = await uploadFile(rutaAlmacenamiento,nameFile)
-    await fs.unlink(rutaAlmacenamiento)
+    //const ruta = await uploadFile(rutaAlmacenamiento,nameFile)
+    //await fs.unlink(rutaAlmacenamiento)
     const imagen = new Imagen({ imgNombre: nameFile, imgRuta: rutaAlmacenamiento })
     await imagen.save()
 
@@ -88,7 +88,11 @@ async function downloadImage(req, res) {
     await Imagen.findById(idImagen).then( async (docs) => {
       console.log('Estamos intentado encontrar tu imagen')
       const rutaAlmacenamiento = docs.imgRuta
-      await downloadFile(docs.imgNombre, docs.imgRuta).then(
+      const dir = __dirname.substring(0, __dirname.length - 17) 
+      const ruta = dir + rutaAlmacenamiento;
+      const file = fss.readFileSync(ruta)
+    
+      /*await downloadFile(docs.imgNombre, docs.imgRuta).then(
       async (data)=>{
       console.log('paso 1')
       //const dir = __dirname.substring(0, __dirname.length - 17)
@@ -100,18 +104,16 @@ async function downloadImage(req, res) {
       const file = fss.readFileSync(rutaAlmacenamiento)
       /*const imagenConvertidad = JSON.stringify(file)
       console.log(imagenConvertidad);
-      console.log('Convertida, te la vamos a enviar')*/
+      console.log('Convertida, te la vamos a enviar')
       //console.log(file);
       await fs.unlink(rutaAlmacenamiento)
-      console.log('paso 3')
+      console.log('paso 3')*/
+
       return res.status(200).send(file)
 
        
         
       })
-      
-
-    })
   } catch (e) {
     console.log(e)
     return res.status(404).json('Errosillo')
