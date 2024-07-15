@@ -17,7 +17,11 @@ const businessSchema = new Schema({
   latitude: { type: String, required: true },
   longitude: { type: String, required: true },
   description: { type: String, required: true },
-  imgPath: [{ type: Schema.Types.ObjectId, ref: 'Imagen' }],
+//  imgPath: [{type: Schema.Types.ObjectId, ref: 'Imagen'}],
+ imgPath :{type: String, required: true},
+ //imagenes: {type: mongoose.Schema.Types.Mixed},
+  
+ 
   horario: { type: String },
   servicios: [{ type: mongoose.Schema.Types.ObjectId, ref: 'services' }],
   citas: [{ type: Schema.Types.ObjectId, ref: 'cita' }],

@@ -2,16 +2,22 @@
 const usuario = require('../../models/users.model.js')
 const tolkien = require('../../models/deviceToken.model.js')
 const business = require('../../models/business.model.js')
+
 const citame = require('../../models/cita.model.js')
 const jwt = require('jsonwebtoken')
+const {handleHttpError}= require('../../utils/handleError.js');
 var AWS = require('aws-sdk')
-const config = require('../../config/configjson.js')
+const config = require('../../config/configjson.js');
+const {tokenSign} = require('../../utils/handleJwt.js')
+const { JSONType } = require('@aws-sdk/client-s3')
 var contadorDeGetUser = 0;
 var contadorDePostUser = 0;
 var contadorDeGetAllUsers = 0;
 var contadorDeUpdateUser = 0;
 var contadorDeFavoriteBusiness = 0;
 //Función para obtener usuario
+
+
 async function getUser(req, res) {
   contadorDeGetUser++;
   console.log('getUsers: ' + contadorDeGetUser);
@@ -49,82 +55,72 @@ async function getAllUser(req, res) {
   try {
     const allUsers = await usuario.find()
     const allActiveUsers = allUsers.filter((nUser) => nUser.googleId != req.get('googleId'))
-    return res.status(200).json(allActiveUsers)
+    //return res.status(200).json(allActiveUsers)
+    res.status(200).send(allUsers);
   } catch (e) {
-    return res.status(404).json('Errorsillo')
+     handleHttpError(res, "error to get all users")  
   }
 }
 
-/* #region función para crear usuario */
-async function postUser(req, res) {
+
+
+const postUser = async(req, res)=> {
+  
   /* #region Borrar esto en producción */
   contadorDePostUser++; //TODO: Borrar esto en producción
   console.log('PostUser: ' + contadorDePostUser); //TODO: Borrar esto en producción
- /* #endregion */
-  /* #region procedimientos */
   try {
-    // Primero le preguntamos a la base de datos si el email del usuario existe
-    usuario.findOne({ emailUser: req.body.emailUser }).then(async (docs) => {
-      /* #region que pasa cuando no existe el email del usuario en la base de datos */
-      if (docs == null) {
-        console.log('Creando usuario') //TODO: Borrar esto en producción
-        /* #region crear usuario que entiende la base de datos utilizando los datos que vienen en el body del request que viene del front */
-        const usuarioSave = await usuario({
-          googleId: req.body.googleId,
-          userName: req.body.userName,
-          emailUser: req.body.emailUser,
-          avatar: req.body.avatar,
-          deviceTokens: [req.body.deviceToken],
-        })
-        
-        usuarioSave.save() // Guardar usuario en la base de datos
-       /* #endregion */
-        /* #region código de Anthony: sirve para generar el token */
-        const token = jwt.sign({ idUser: usuarioSave._id }, config.jwtSecret, {
-          //Obtenemos y guardamos el id del usuario con su token
-          algorithm: 'HS256',
-          expiresIn: 60 * 60 * 24 * 7, //Expira en 1 dia
-        });
-        /* #endregion */
-        return res.status(201).json({ auth: true, token }) // 201: Enviar respuesta al front, se envia el token para autentificación.
-      } 
-      /* #endregion */
-      /* #region que pasa cuando el email del usuario existe en la base de datos */
-      else {
-        /* #region agregar dispositivos a email de usuario */
-        const usuarioSave = await usuario.findOne({ emailUser: req.body.emailUser })
+    
+    const  {emailUser, googleId, userName, avatar, deviceToken} = req.body;
+    const user = await usuario.findOne({ emailUser: emailUser })
+      if(user == null ){
 
-        if (!usuarioSave.deviceTokens.includes(req.body.deviceToken)) {
-          usuarioSave.deviceTokens.push(req.body.deviceToken)
-          tokens = JSON.parse(JSON.stringify(usuarioSave.deviceTokens))
-          id = JSON.parse(JSON.stringify(usuarioSave._id))
-          await usuario.findByIdAndUpdate(id, {
-            $set: { deviceTokens: tokens },
-          })
-        }
+      const newUser = {
+        googleId: googleId,
+        emailUser: emailUser,
+        userName: userName,
+        avatar: avatar,
+        deviceTokens: deviceToken
+      }  
+      const createdUser = await usuario.create(newUser);
+      
 
-        /* #endregion */
-        /* #region crear token, esto debería ser una función porque lo usamos 2 veces */
-        const token = jwt.sign({ idUser: usuarioSave._id }, config.jwtSecret, {
-          //Obtenemos y guardamos el id del usuario con su token
-          algorithm: 'HS256',
-          expiresIn: 60 * 60 * 24 * 7, //Expira en 1 dia
-        });
-
-        /* #endregion */
-        return res.status(201).json({ auth: true, token }) // 201: Enviar respuesta al front, se envia el token para autentificación.
+      const userWithToken = {
+        token: await tokenSign(createdUser),
+        user: createdUser
       }
-      /* #endregion */
-    })
-  } 
-  /* #endregion */
-  /* #region que pasa en caso de error */
-  catch (e) {
-    return res.status(404).json('Errosillo') // 404: Se envía un error genérico.
+            
+        res.status(201).send(userWithToken);
+      }
+      else{
+         console.log("ya existe");
+         const {deviceTokens: tokens} = user;
+        
+         if (!tokens.includes(deviceToken)) {
+          tokens.push(deviceToken);
+  
+              
+           }
+           const userUpdated =  await usuario.findByIdAndUpdate(user._id, {
+            $set: { deviceTokens: tokens }
+          })
+         
+           const userWithToken = {
+            token: await tokenSign(userUpdated),
+            user: userUpdated
+          }
+        
+          res.status(200).send(userWithToken);        
+          
+          }
+ }
+
+  catch (error) {
+        console.log(error )
+        handleHttpError(res, "ERROR AL CREAR USUARIO", 404);  
+  
   }
-/* #endregion */
 }
-/* #endregion */
 
 
 
@@ -147,54 +143,72 @@ async function updateUser(req, res) {
   })
 }
 
-async function FavoriteBusiness(req, res) {
+
+
+
+const FavoriteBusiness = async(req, res) => {
+ try {
+  let contador = 0;
+  
+   
+  const negocio =await business.findById(req.body.idBusiness);
+  console.log(negocio);
+ 
   contadorDeFavoriteBusiness++;
   console.log('FavoriteBusiness: ' + contadorDeFavoriteBusiness);
-  const token = req.headers['x-access-token'] //Buscar en los headers que me tienes que mandar, se tiene que llamar asi para que la reciba aca
-
-  if (!token) {
-    return res.status(401).json({
-      auth: false,
-      message: 'No token',
-    })
-  }
-  //Una vez exista el JWT lo decodifica
-  const decoded = jwt.verify(token, config.jwtSecret) //Verifico en base al token
-
+let negocios = [];  
   let item = []
-  let previousBusiness = ''
-
-  await usuario.findById(decoded.idUser).then((docs) => {
-    previousBusiness = docs.favoriteBusiness
-  })
-  let modelo = ''
-  await business.findById(req.body.idBusiness).then((docs) => {
-    modelo = docs._doc
-  })
-  modelo = JSON.parse(JSON.stringify(modelo))
-  item = JSON.parse(JSON.stringify(previousBusiness))
-
-  /* const mapOfIds = item.map((este)=>{
-            return este._id;
-        })*/
-
-  const index = item.indexOf(modelo._id)
-  if (index != -1) {
-    if (item.length == 1) {
-      item = []
-    } else {
-      item.splice(index, 1)
+  
+  const {user} = req; 
+   
+  const {body} = req;
+  item = JSON.parse(JSON.stringify(user.favoriteBusinessIds))
+negocios = JSON.parse(JSON.stringify(user.favoriteBusiness));
+  
+  const index = item.indexOf(body.idBusiness)
+  const {idBusiness} = body 
+  
+  item = item.filter(idNegocio =>{
+    if(idBusiness != idNegocio){
+        return idNegocio; 
     }
-  } else {
-    const nuevoModeloBien = await business.findById(req.body.idBusiness)
-    item.push(nuevoModeloBien._id)
-  }
+    else{
+        contador ++;
+    }
+})
 
-  const mod = { favoriteBusiness: item }
+negocios = negocios.filter(negocio=>{
+      if(idBusiness != negocio._id){
+        return negocio;
+      }        
+      else{
+        contador ++;
+      }
 
-  await usuario.findByIdAndUpdate(decoded.idUser, { $set: mod })
+      
+})
 
-  return res.status(200).send('Nitido')
+if(contador == 0){
+  item.push(body.idBusiness);
+  negocios.push(negocio);
+ 
+}
+
+
+  const mod = { favoriteBusinessIds: item , favoriteBusiness: negocios};
+  
+  const usuarioResult = await usuario.findByIdAndUpdate(user.id, { $set: mod })
+
+  
+  
+res.status(200).send(usuarioResult);
+
+
+ } catch (error) {
+   handleHttpError(res, "error to add favorite")
+   console.log(error);
+ }  
+
 }
 
 async function deleteFavBusiness(req, res) {}
