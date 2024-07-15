@@ -1,6 +1,7 @@
 const express = require('express')
-const uploadMiddleware = require('../middlewares/uploadMiddleware')
-
+//const uploadMiddleware = require('../middlewares/uploadMiddleware')
+const {authMiddleWare} = require('../middlewares/auth.js');
+const {uploadMiddleware} = require('../../utils/handleStorage.js')
 //Importación de funciones
 const {
   getAllBusiness,
@@ -22,7 +23,7 @@ const businessRouter = express.Router()
 //Asignación de direcciones
 businessRouter.get('/api/business/get/all', getAllBusiness)
 businessRouter.get('/api/business/get/owner', getOwnerBusiness)
-businessRouter.post('/api/business/create', uploadMiddleware.single('imagen'), postBusiness)
+businessRouter.post('/api/business/create', uploadMiddleware.single('myfile'), postBusiness)
 businessRouter.get('/api/business/verify/owner/business', verifyOwnerBusiness)
 businessRouter.delete('/api/business/delete', deleteBusiness)
 businessRouter.put('/api/business/update', updateWorkersInBusinessbyCreateWorker)

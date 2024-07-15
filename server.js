@@ -1,14 +1,12 @@
 const http = require('http')
-const app = require('./src/app')
-const configurac = require('./config')
+const app = require('./app')
+
 //const fileUpload = require('express-fileupload')
 const { Server } = require('socket.io')
 const user = require('./src/models/users.model')
 const { deleteBusiness } = require('./src/routes/business/business.controller')
 var AWS = require('aws-sdk')
 var uuid = require('uuid')
-
-
 const { connect } = require('./src/config/database')
 const { setTimeout } = require('timers')
 //const {setupWebSocket} = require('./src/routes/notification/notification.controller');
@@ -140,5 +138,3 @@ async function main(){
 }
 
 main()
-
-

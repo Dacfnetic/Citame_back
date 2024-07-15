@@ -3,10 +3,12 @@ const usuario = require('../../models/users.model.js')
 const business = require('../../models/business.model.js')
 const services = require('../../models/services.model.js')
 const workerModel = require('../../models/worker.model.js')
+const imageModel = require('../../models/image.model.js');
 const citaModel = require('../../models/cita.model.js')
 const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 const config = require('../../config/configjson.js')
+const {handleHttpError} = require('../../utils/handleError.js');
 const {
   deleteImagesOnArrayService,
   deleteImagesOnArrayWorkers,
@@ -15,6 +17,8 @@ const {
 const ImageService = require('../images/img.service.js')
 const Agenda = require('../../models/agenda.js')
 const { uploadImage, uploadImageInside } = require('../images/img.controller.js')
+
+const PUBLIC_URL = process.env.PUBLIC_URL;
 
 var contadorDeGetAllBusiness = 0
 var contadorDeGetOwnerBusiness = 0
@@ -39,6 +43,7 @@ async function getAllBusiness(req, res) {
       .then(async (docs) => {
         if (docs.emailUser == req.get('email')) {
           const allBusiness = await business.find({ category: req.get('category') })
+          console.log(allBusiness);
           return res.status(200).json(allBusiness)
         }
       })
@@ -47,6 +52,9 @@ async function getAllBusiness(req, res) {
     return res.status(404).json('Errosillo')
   }
 }
+
+
+
 async function getOwnerBusiness(req, res) {
   contadorDeGetOwnerBusiness++
   console.log('getOwnerBusiness: ' + contadorDeGetOwnerBusiness)
@@ -86,10 +94,13 @@ async function verifyOwnerBusiness(req, res) {
       })
       .catch((e) => console.log(e))
   } catch (e) {
-    return res.status(404).json('Errosillo')
+    
   }
 }
 async function postBusiness(req, res) {
+
+
+  console.log(PUBLIC_URL);
   /* #region borrar esto en producción */
   console.log('Intentando crear negocio')
   contadorDePostBusiness++
@@ -97,7 +108,8 @@ async function postBusiness(req, res) {
   /* #endregion */
   try {
     let existe = true
-
+    const {file} = req;
+   console.log(file);
     /* #region buscar si el negocio que se intanta registrar ya existe, si es así se devuelve el mensaje de que ya existe */
     await business
       .findOne({
@@ -127,6 +139,8 @@ async function postBusiness(req, res) {
         description: req.body.description,
         horario: '{}',
         servicios: req.body.servicios,
+        imgPath: `${PUBLIC_URL}/${file.filename}`
+
       })
       await nuevo.save()
       item = JSON.parse(JSON.stringify(docs.ownerBusiness))
@@ -136,7 +150,8 @@ async function postBusiness(req, res) {
       await usuario.findByIdAndUpdate(docs._id, { $set: mod }).then((data)=>{
         docs.ownerBusiness.push(nuevo.id);
 
-        uploadImageInside(req.file, nuevo.id, req.body.destiny);
+        
+      //  uploadImageInside(req.file, nuevo.id, req.body.destiny);
       
         return res.status(201).json(nuevo)
       })
@@ -408,6 +423,9 @@ async function updateBusiness(req, res) {
   })
 }
 async function getFavBusiness(req, res) {
+  
+  
+  /*
   const token = req.headers['x-access-token'] //Buscar en los headers que me tienes que mandar, se tiene que llamar asi para que la reciba aca
   contadorDeGetFavBusiness++
   console.log('getFavBusiness: ' + contadorDeGetFavBusiness)
@@ -419,15 +437,19 @@ async function getFavBusiness(req, res) {
   }
   //Una vez exista el JWT lo decodifica
   const decoded = jwt.verify(token, config.jwtSecret) //Verifico en base al token
+*/
+  
+  const {favoriteBusiness} = req.user; 
 
-  await usuario.findById(decoded.idUser).then(async (docs) => {
-    const negociosFavoritos = docs.favoriteBusiness
     const negocios = await Promise.all(
-      negociosFavoritos.map(async (negocio) => business.findById(negocio)),
+      favoriteBusiness.map(async (negocio) => business.findById(negocio)),
     )
     return res.status(200).json(negocios)
-  })
+  
 }
+
+
+
 async function updateBusinessSchedule(req, res) {
   contadorDeUpdateBusinessSchedule++
   console.log('updateBusinessSchedule: ' + contadorDeUpdateBusinessSchedule)
