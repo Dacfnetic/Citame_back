@@ -20,7 +20,7 @@ const storageRouter = require('./src/routes/storage/storage.router.js');
 const app = express();
 
 //cuidado donde se ubica la carpeta storage
-app.use(express.static('src/storage'));
+app.use(express.static('src/storageResized'));
 
 //Informacion del servidor
 app.use(cors())
