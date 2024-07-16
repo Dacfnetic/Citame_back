@@ -7,25 +7,16 @@ const MEDIAPATH = `${__dirname}/../storage`
 const resizeImage = async (req,res,next ) =>{
    
      try {
-        const{file} = req;
-        const filenameOld = file.filename;    
-        console.log(file);
-        const resizedFileName = `resize-${file.filename.split('.').slice(0, -1).join('.')}.webp`;
-        const resizedFilePath =`${__dirname}/../storageResized/${resizedFileName}`;
-         
-        await sharp(file.path)
+      const{file} = req;
+      const resizedFileName = `resize-${Date.now()}.webp`;
+      const resizedFilePath =`${__dirname}/../storageResized/${resizedFileName}`;
+        
+      await sharp(file.buffer)
             .webp()
             .resize(300) 
             .toFile(resizedFilePath);
 
         req.file.filename = resizedFileName;
-        req.file.path = resizedFilePath;
-        const oldpath = `${MEDIAPATH}/${filenameOld}`;
-        const files = await fs.readdir(oldpath, (error)=>{
-         if(error){
-            console.log(error);
-         }
-        });
         
        
         
