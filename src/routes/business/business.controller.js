@@ -33,21 +33,16 @@ var contadorDeGetFavBusiness = 0
 var contadorDeUpdateBusinessSchedule = 0
 var contadorDeSaveChangesFromBusiness = 0
 
-async function getAllBusiness(req, res) {
+const getAllBusiness = async (req, res) =>{
   console.log('Intentando obtener negocios por categoria')
   contadorDeGetAllBusiness++
   console.log('getAllBusiness: ' + contadorDeGetAllBusiness)
   try {
-    usuario
-      .findOne({ emailUser: req.get('email') })
-      .then(async (docs) => {
-        if (docs.emailUser == req.get('email')) {
-          const allBusiness = await business.find({ category: req.get('category') })
-          console.log(allBusiness);
-          return res.status(200).json(allBusiness)
-        }
-      })
-      .catch((e) => console.log(e))
+    const categoria = req.query.category;
+
+    const allBusiness = await business.find({ category: categoria })
+    res.status(200).json(allBusiness)
+
   } catch (e) {
     return res.status(404).json('Errosillo')
   }
@@ -108,24 +103,25 @@ const postBusiness = async(req, res)=> {
   /* #endregion */
   try {
 
-    const {file, businessName, email, user} = req;
+    const {file, user, body} = req;
+    const {businessName, category, email, contactNumber, direction, latitude, longitude, description, servicios} = body;
 
     const negocioExistente = await business.findOne({businessName: businessName, email: email});
     
     if (negocioExistente != null) res.status(202).send('El negocio ya existe');
 
     const nuevoNegocio = new business({
-      businessName: req.body.businessName,
-      category: req.body.category,
-      email: req.body.email,
-      createdBy: docs._id,
-      contactNumber: req.body.contactNumber,
-      direction: req.body.direction,
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
-      description: req.body.description,
+      businessName: businessName,
+      category: category,
+      email: email,
+      createdBy: user._id,
+      contactNumber: contactNumber,
+      direction: direction,
+      latitude: latitude,
+      longitude: longitude,
+      description: description,
       horario: '{}',
-      servicios: req.body.servicios,
+      servicios: servicios,
       imgPath: `${PUBLIC_URL}/${file.filename}`
     })
 

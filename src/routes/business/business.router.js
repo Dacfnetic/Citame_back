@@ -21,7 +21,7 @@ const {
 //Creación de enrutador
 const businessRouter = express.Router()
 //Asignación de direcciones
-businessRouter.get('/api/business/get/all', getAllBusiness)
+businessRouter.get('/api/business/get/all', authMiddleWare, getAllBusiness)
 businessRouter.get('/api/business/get/owner', getOwnerBusiness)
 businessRouter.post('/api/business/create', authMiddleWare ,uploadMiddleware.single('myfile'), postBusiness)
 businessRouter.get('/api/business/verify/owner/business', verifyOwnerBusiness)
