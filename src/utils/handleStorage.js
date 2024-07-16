@@ -1,6 +1,8 @@
 const multer = require('multer');
 const sharp = require('sharp');
 
+/*
+
 const storage = multer.diskStorage({
     //esta funcion es para saber donde se va a guardar el archivo recibido
     destination:function(req, file, callback){
@@ -23,15 +25,15 @@ const storage = multer.diskStorage({
 });
 
 
+*/
 
+const storage = multer.memoryStorage();
 
 
 
 
 //uso de middleware para multer
 
-const uploadMiddleware = multer({
-    storage
-})
+const uploadMiddleware = multer({storage})
 
 module.exports = {uploadMiddleware};
