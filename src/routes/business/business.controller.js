@@ -97,7 +97,7 @@ async function verifyOwnerBusiness(req, res) {
     
   }
 }
-async function postBusiness(req, res) {
+const postBusiness = async(req, res)=> {
 
 
   console.log(PUBLIC_URL);
@@ -107,57 +107,36 @@ async function postBusiness(req, res) {
   console.log('postBusiness: ' + contadorDePostBusiness)
   /* #endregion */
   try {
-    let existe = true
-    const {file} = req;
-   console.log(file);
-    /* #region buscar si el negocio que se intanta registrar ya existe, si es así se devuelve el mensaje de que ya existe */
-    await business
-      .findOne({
-        businessName: req.body.businessName,
-        email: req.body.email,
-        workers: req.body.workers,
-      })
-      .then((docs) => {
-        if (docs == null) {
-          existe = false
-        }
-      })
-    if (existe) return res.status(202).send('El negocio ya existe')
-    /* #endregion */
 
-    await usuario.findOneAndUpdate({ emailUser: req.body.email }).then(async (docs) => {
+    const {file, businessName, email, user} = req;
 
-      const nuevo = new business({
-        businessName: req.body.businessName,
-        category: req.body.category,
-        email: req.body.email,
-        createdBy: docs._id,
-        contactNumber: req.body.contactNumber,
-        direction: req.body.direction,
-        latitude: req.body.latitude,
-        longitude: req.body.longitude,
-        description: req.body.description,
-        horario: '{}',
-        servicios: req.body.servicios,
-        imgPath: `${PUBLIC_URL}/${file.filename}`
+    const negocioExistente = await business.findOne({businessName: businessName, email: email});
+    
+    if (negocioExistente != null) res.status(202).send('El negocio ya existe');
 
-      })
-      await nuevo.save()
-      item = JSON.parse(JSON.stringify(docs.ownerBusiness))
-      item.push(nuevo._id)
-      const mod = { ownerBusiness: item }
-
-      await usuario.findByIdAndUpdate(docs._id, { $set: mod }).then((data)=>{
-        docs.ownerBusiness.push(nuevo.id);
-
-        
-      //  uploadImageInside(req.file, nuevo.id, req.body.destiny);
-      
-        return res.status(201).json(nuevo)
-      })
-
-      
+    const nuevoNegocio = new business({
+      businessName: req.body.businessName,
+      category: req.body.category,
+      email: req.body.email,
+      createdBy: docs._id,
+      contactNumber: req.body.contactNumber,
+      direction: req.body.direction,
+      latitude: req.body.latitude,
+      longitude: req.body.longitude,
+      description: req.body.description,
+      horario: '{}',
+      servicios: req.body.servicios,
+      imgPath: `${PUBLIC_URL}/${file.filename}`
     })
+
+    const negocioCreado = await business.create(nuevoNegocio);
+    
+    const userUpdated =  await usuario.findByIdAndUpdate(user._id, {
+      $set: { ownerBusiness: negocioCreado, ownerBusinessIds:  negocioCreado._id}
+    });
+
+    res.status(201).json(userUpdated);
+    
   } catch (e) {
     console.log(e)
     return res.status(404).json('Errosillo')

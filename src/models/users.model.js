@@ -19,8 +19,10 @@ const userSchema = new Schema(
   ],
    //ids: {type: mongoose.Types.ObjectId },  
   favoriteBusiness:[{type: mongoose.Schema.Types.Mixed}],
-  favoriteBusinessIds: [{ type: Schema.Types.ObjectId, ref: 'business' }],
-  ownerBusiness: [{ type: Schema.Types.ObjectId, ref: 'business' }],
+  favoriteBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
+  ownerBusiness:[{type: mongoose.Schema.Types.Mixed}],
+  ownerBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
+  
   citas: [{ type: Schema.Types.ObjectId, ref: 'cita' }],
   //status:{type:Boolean},
   //bussinessAsOwner: [String],
