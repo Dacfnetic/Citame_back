@@ -194,7 +194,7 @@ if(contador == 0){
  
 }
 
-
+  console.log(contador);
   const mod = { favoriteBusinessIds: item , favoriteBusiness: negocios};
   
   const usuarioResult = await usuario.findByIdAndUpdate(user.id, { $set: mod })

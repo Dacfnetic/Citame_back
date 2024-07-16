@@ -1,6 +1,6 @@
 const express = require('express')
 //const uploadMiddleware = require('../middlewares/uploadMiddleware')
-const {authMiddleWare} = require('../middlewares/auth.js');
+const {authMiddleWare} = require('../../middlewares/auth.js');
 const {uploadMiddleware} = require('../../utils/handleStorage.js')
 //Importación de funciones
 const {

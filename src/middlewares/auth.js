@@ -1,6 +1,6 @@
-const {handleHttpError} = require('../../utils/handleError');
-const { verifyToken } = require('../../utils/handleJwt');
-const usuario = require('../../models/users.model');
+const {handleHttpError} = require('../utils/handleError');
+const { verifyToken } = require('../utils/handleJwt');
+const usuario = require('../models/users.model');
 
 
 

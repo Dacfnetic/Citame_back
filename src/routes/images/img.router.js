@@ -1,6 +1,8 @@
+
+/*
 const express = require('express')
 const imgController = require('../images/img.controller')
-const uploadMiddleware = require('../middlewares/uploadMiddleware')
+//const uploadMiddleware = require('../middlewares/uploadMiddleware')
 
 const imgRouter = express.Router()
 
@@ -9,3 +11,4 @@ imgRouter.get('/api/imagen/download', imgController.downloadImage)
 imgRouter.delete('/api/imagen/delete', imgController.deleteImage)
 
 module.exports = imgRouter
+*/
