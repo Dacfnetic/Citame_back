@@ -9,20 +9,10 @@ const userSchema = new Schema(
   userName: { type: String, required: true },
   emailUser: { type: String, required: true, unique: true },
   avatar: { type: String, required: true },
-  deviceTokens: [
-    { 
-    
-      type: String, 
-      
-
-    }
-  ],
+  deviceTokens: [{type: String,}],
    //ids: {type: mongoose.Types.ObjectId },  
-  favoriteBusiness:[{type: mongoose.Schema.Types.Mixed}],
   favoriteBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
-  ownerBusiness:[{type: mongoose.Schema.Types.Mixed}],
   ownerBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
-  
   citas: [{ type: Schema.Types.ObjectId, ref: 'cita' }],
   //status:{type:Boolean},
   //bussinessAsOwner: [String],

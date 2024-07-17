@@ -3,9 +3,7 @@ const usuario = require('../../models/users.model.js')
 const business = require('../../models/business.model.js')
 const services = require('../../models/services.model.js')
 const workerModel = require('../../models/worker.model.js')
-const imageModel = require('../../models/image.model.js');
 const citaModel = require('../../models/cita.model.js')
-const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 const config = require('../../config/configjson.js')
 const {handleHttpError} = require('../../utils/handleError.js');
@@ -16,20 +14,16 @@ const {
 } = require('../../config/functions.js')
 const ImageService = require('../images/img.service.js')
 const Agenda = require('../../models/agenda.js')
-const { uploadImage, uploadImageInside } = require('../images/img.controller.js')
 
 const PUBLIC_URL = process.env.PUBLIC_URL;
 
 var contadorDeGetAllBusiness = 0
-var contadorDeGetOwnerBusiness = 0
-var contadorDeVerifyOwnerBusiness = 0
 var contadorDePostBusiness = 0
 var contadorDeDeleteBusiness = 0
 var contadorDeUpdateWorkersInBusinessbyCreateWorker = 0
 var contadorDeUpdateWorkers = 0
 var contadorDeUpdateArrayServices = 0
 var contadorDeUpdateBusiness = 0
-var contadorDeGetFavBusiness = 0
 var contadorDeUpdateBusinessSchedule = 0
 var contadorDeSaveChangesFromBusiness = 0
 
@@ -39,57 +33,10 @@ const getAllBusiness = async (req, res) =>{
   console.log('getAllBusiness: ' + contadorDeGetAllBusiness)
   try {
     const categoria = req.query.category;
-
     const allBusiness = await business.find({ category: categoria })
     res.status(200).json(allBusiness)
-
   } catch (e) {
     return res.status(404).json('Errosillo')
-  }
-}
-
-
-
-async function getOwnerBusiness(req, res) {
-  contadorDeGetOwnerBusiness++
-  console.log('getOwnerBusiness: ' + contadorDeGetOwnerBusiness)
-  try {
-    console.log('Intentando obtener negocios del usuario')
-    usuario
-      .findOne({ emailUser: req.get('email') })
-      .then(async (docs) => {
-          const ownerBusiness = await business.find({ createdBy: docs._id })
-          console.log('Ya tenemos la lista de negocios del usuario')
-          const comprob = req.get('estado')
-          if (comprob != '1') {
-            console.log('Como no habian cambios no te enviamos nada')
-            return res.status(200).send('1')
-          }
-          console.log(
-            'Ahora te vamos a enviar los negocios del usuario, luego te envio las imagenes',
-          )
-          return res.status(201).json(ownerBusiness)
-      })
-      .catch((e) => console.log(e))
-  } catch (e) {
-    return res.status(404).json('Errosillo')
-  }
-}
-async function verifyOwnerBusiness(req, res) {
-  contadorDeVerifyOwnerBusiness++
-  console.log('verifyOwnerBusiness: ' + contadorDeVerifyOwnerBusiness)
-  try {
-    usuario
-      .findOne({ emailUser: req.get('email') })
-      .then(async (docs) => {
-          if (docs.ownerBusiness.length != 0) {
-              return res.status(200).send('1')
-          }
-          return res.status(201).send('0')
-      })
-      .catch((e) => console.log(e))
-  } catch (e) {
-    
   }
 }
 const postBusiness = async(req, res)=> {
@@ -128,17 +75,17 @@ const postBusiness = async(req, res)=> {
     const negocioCreado = await business.create(nuevoNegocio);
     
     const userUpdated =  await usuario.findByIdAndUpdate(user._id, {
-      $set: { ownerBusiness: negocioCreado, ownerBusinessIds:  negocioCreado._id}
-    });
+      $addToSet: { ownerBusiness: negocioCreado, ownerBusinessIds:  negocioCreado._id}
+    }, {new: true});
 
-    res.status(201).json(userUpdated);
+    //Lookup
+    res.status(201).send(userUpdated);
     
   } catch (e) {
     console.log(e)
     return res.status(404).json('Errosillo')
   }
 }
-
 async function deleteBusiness(req, res) {
   console.log('Intentando borrar negocio')
   contadorDeDeleteBusiness++
@@ -397,34 +344,6 @@ async function updateBusiness(req, res) {
     return res.status(200).json({ business: negocioUpdated })
   })
 }
-async function getFavBusiness(req, res) {
-  
-  
-  /*
-  const token = req.headers['x-access-token'] //Buscar en los headers que me tienes que mandar, se tiene que llamar asi para que la reciba aca
-  contadorDeGetFavBusiness++
-  console.log('getFavBusiness: ' + contadorDeGetFavBusiness)
-  if (!token) {
-    return res.status(401).json({
-      auth: false,
-      message: 'No token',
-    })
-  }
-  //Una vez exista el JWT lo decodifica
-  const decoded = jwt.verify(token, config.jwtSecret) //Verifico en base al token
-*/
-  
-  const {favoriteBusiness} = req.user; 
-
-    const negocios = await Promise.all(
-      favoriteBusiness.map(async (negocio) => business.findById(negocio)),
-    )
-    return res.status(200).json(negocios)
-  
-}
-
-
-
 async function updateBusinessSchedule(req, res) {
   contadorDeUpdateBusinessSchedule++
   console.log('updateBusinessSchedule: ' + contadorDeUpdateBusinessSchedule)
@@ -434,11 +353,15 @@ async function updateBusinessSchedule(req, res) {
   let resultado = await business.findByIdAndUpdate(req.body.idBusiness, { $set: modificaciones })
   return res.status(200).send('Todo ok')
 }
-async function saveChangesFromBusiness(req, res) {
+const saveChangesFromBusiness = async (req, res) =>{
   //Update Services
   contadorDeSaveChangesFromBusiness++
   console.log('saveChangesFromBusiness: ' + contadorDeSaveChangesFromBusiness)
+
   const busi = await business.findById(req.body.businessId)
+  const {servicios, workers, workersIds} = busi._doc;
+  const {/*requestedServices,*/ requestedWorkers} = req.body;
+
   let previousService = busi._doc.servicios //Servicios existentes
   let listaServices = []
   listaServices = JSON.parse(JSON.stringify(previousService))
@@ -469,58 +392,51 @@ async function saveChangesFromBusiness(req, res) {
   const newServices = await services.insertMany(newServicesToInsert)
 
   //Update Workers
-  let previousWorker = busi._doc.workers //Trabajadores existentes
-  let listaWorkers = []
-  listaWorkers = JSON.parse(JSON.stringify(previousWorker))
-  let nuevoWorker = []
-  let requestedWorkers = JSON.parse(req.body.requestedWorkers)
+  let previousWorkers = JSON.parse(JSON.stringify(workers))
+  let newWorkers = JSON.parse(requestedWorkers)
   let contador = 0
+/*
 
-  const emailDeTrabajadoresAntiguos = listaWorkers.map(async (worker) => {
-    let trabajador = await workerModel.findById(worker)
-    return trabajador.email
+  const emailDeTrabajadoresAntiguos = previousWorkers.map(async (worker) => {
+    const trabajador = await workerModel.findById(worker);
+    return worker.email;
   })
-
+ 
   for (let worker of requestedWorkers) {
-    await usuario.findOne({ emailUser: worker.email }).then(async (docs) => {
-      if (docs != null) {
-        if (!emailDeTrabajadoresAntiguos.includes(worker.email)) {
-          let horasQueVaATrabajarElEsclavo = new Agenda()
+    const usuarioDelWorker = await usuario.findOne({ emailUser: worker.email });
+    if(usuarioDelWorker != null){
+      if (!emailDeTrabajadoresAntiguos.includes(worker.email)) {
+        let horasQueVaATrabajarElEsclavo = new Agenda()
+        horasQueVaATrabajarElEsclavo.construirHorarioInicial(JSON.parse(worker.horario))
 
-          horasQueVaATrabajarElEsclavo.construirHorarioInicial(JSON.parse(worker.horario))
+        const newWorker = new workerModel({
+          idDeUsuario: usuarioDelWorker._id,
+          workwith: busi._doc._id,
+          name: worker.name,
+          email: worker.email,
+          salary: worker.salary,
+          //horario: worker.horario,
+          imgPath: worker.imgPath,
+          horarioDisponible: horasQueVaATrabajarElEsclavo,
+          status: worker.status,
+          puesto: worker.puesto,
+          celular: worker.celular,
+        })
+        const createdWorker = await workerModel.create(newWorker);
 
-          const newWorker = new workerModel({
-            id: docs._id,
-            workwith: busi._doc._id,
-            name: worker.name,
-            email: worker.email,
-            salary: worker.salary,
-            //horario: worker.horario,
-            horarioDisponible: horasQueVaATrabajarElEsclavo,
-            status: worker.status,
-            puesto: worker.puesto,
-            celular: worker.celular,
-          })
-          await newWorker.save()
-          let hola = new ImageService()
-          await hola.uploadImage({
-            buffer: req.files.imagen[contador],
-            id: newWorker._id,
-            destiny: 'worker',
-          })
-          contador++
-          //const idCool = newWorker._id.toString();
-          listaWorkers.push(newWorker._id)
-        }
+      
+        contador++
+        previousWorkers.push(createdWorker._id)
       }
-    })
-  }
+    }
+  
+  }*/
 
   //Update horario
   let modificaciones = {
     horario: req.body.horario,
     servicios: listaServices,
-    workers: listaWorkers,
+   // workers: listaWorkers,
   }
 
   //Actualizar negocio
@@ -532,15 +448,12 @@ async function saveChangesFromBusiness(req, res) {
 //Exportar funciones
 module.exports = {
   getAllBusiness,
-  getOwnerBusiness,
   postBusiness,
-  verifyOwnerBusiness,
   deleteBusiness,
   updateWorkersInBusinessbyCreateWorker,
   updateWorkers,
   updateArrayServices,
   updateBusiness,
-  getFavBusiness,
   updateBusinessSchedule,
   saveChangesFromBusiness,
 }

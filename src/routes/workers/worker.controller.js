@@ -8,7 +8,7 @@ var contadorDeGetWorker = 0;
 var contadorDeDeleteWorker = 0;
 var contadorDeUpdateHorarioWorker = 0;
 
-async function postWorkers(req, res) {
+const postWorkers = async (req, res) => {
   contadorDePostWorker++;
   console.log('postWorker: ' + contadorDePostWorker);
   try {

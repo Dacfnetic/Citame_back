@@ -4,11 +4,11 @@ const citaModel = require('./cita.model')
 
 //Datos que se guardan en la BD
 const workerSchema = new Schema({
-  id: { type: mongoose.Schema.Types.ObjectId, ref: 'usuario', required: true },
+  idDeUsuario: { type: mongoose.Schema.Types.ObjectId, ref: 'usuario', required: true },
   workwith: { type: mongoose.Schema.Types.ObjectId, ref: 'business', required: true },
   name: { type: String, required: true },
   email: { type: String, required: true },
-  imgPath: [{ type: Schema.Types.ObjectId, ref: 'Imagen' }],
+  imgPath :{type: String, required: true},
   salary: { type: Number },
   celular: { type: Number },
   //horario: {type: String},
