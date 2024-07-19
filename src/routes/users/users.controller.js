@@ -8,8 +8,7 @@ const {tokenSign} = require('../../utils/handleJwt.js')
 const { JSONType } = require('@aws-sdk/client-s3')
 var contadorDeGetUser = 0;
 var contadorDePostUser = 0;
-var contadorDeGetAllUsers = 0;
-var contadorDeFavoriteBusiness = 0;
+var contadorDeToggleFavoriteBusiness = 0;
 
 const getUser = async (req, res) =>{
   contadorDeGetUser++;
@@ -32,24 +31,15 @@ const getUser = async (req, res) =>{
     return res.status(404).json('Errorsillo')
   }
 }
-const getAllUser = async (req, res) => {
-  contadorDeGetAllUsers++;
-  console.log('GetAllUsers: ' + contadorDeGetAllUsers);
-  try {
-    res.status(200).send(await usuario.find());
-  } catch (e) {
-     handleHttpError(res, "error to get all users")  
-  }
-}
 const postUser = async(req, res)=> {
   
-  /* #region Borrar esto en producción */
-  contadorDePostUser++; //TODO: Borrar esto en producción
-  console.log('PostUser: ' + contadorDePostUser); //TODO: Borrar esto en producción
+  contadorDePostUser++;
+  console.log('PostUser: ' + contadorDePostUser);
   try {
     
     const  {emailUser, googleId, userName, avatar, deviceToken} = req.body;
     const user = await usuario.findOne({ emailUser: emailUser })
+
       if(user == null ){
 
       const newUser = {
@@ -61,7 +51,6 @@ const postUser = async(req, res)=> {
       }  
       const createdUser = await usuario.create(newUser);
       
-
       const userWithToken = {
         token: await tokenSign(createdUser),
         user: createdUser
@@ -100,14 +89,14 @@ const postUser = async(req, res)=> {
   
   }
 }
-const FavoriteBusiness = async(req, res) => {
+const toggleFavoriteBusiness = async(req, res) => {
  try {
   let contador = 0;
   const negocio =await business.findById(req.body.idBusiness);
   console.log(negocio);
  
-  contadorDeFavoriteBusiness++;
-  console.log('FavoriteBusiness: ' + contadorDeFavoriteBusiness);
+  contadorDeToggleFavoriteBusiness++;
+  console.log('FavoriteBusiness: ' + contadorDeToggleFavoriteBusiness);
   let item = []
   
   const {user} = req; 
@@ -136,8 +125,6 @@ if(contador == 0){
   
   const usuarioResult = await usuario.findByIdAndUpdate(user.id, { $set: mod })
 
-  //Aquí tendría que ir el lookup
-  
 res.status(200).send(usuarioResult);
 
 
@@ -147,9 +134,4 @@ res.status(200).send(usuarioResult);
  }  
 
 }
-module.exports = {
-  getUser,
-  postUser,
-  getAllUser,
-  FavoriteBusiness,
-}
+module.exports = { getUser, postUser, toggleFavoriteBusiness }

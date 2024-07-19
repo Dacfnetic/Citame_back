@@ -4,25 +4,18 @@ const business = require('./business.model')
 
 //Datos que se guardan en la BD
 const userSchema = new Schema(
-  {
-  googleId: { type: String, required: true },
-  userName: { type: String, required: true },
-  emailUser: { type: String, required: true, unique: true },
+{
   avatar: { type: String, required: true },
-  deviceTokens: [{type: String,}],
-   //ids: {type: mongoose.Types.ObjectId },  
-  favoriteBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
-  ownerBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
   citas: [{ type: Schema.Types.ObjectId, ref: 'cita' }],
-  //status:{type:Boolean},
-  //bussinessAsOwner: [String],
-  //bussinessAsEmployer: [String]
+  deviceTokens: [{type: String,}],
+  emailUser: { type: String, required: true, unique: true },
+  favoriteBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
+  googleId: { type: String, required: true },
+  ownerBusinessIds: [{type: Schema.Types.ObjectId, ref: 'business'}],
+  userName: { type: String, required: true },
 }, 
 {
   timestamps: true
-}
-
-
-)
+});
 
 module.exports = model('usuario', userSchema)

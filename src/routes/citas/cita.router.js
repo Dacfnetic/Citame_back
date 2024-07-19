@@ -10,6 +10,4 @@ citaRouter.put('/api/cita/updateCita', updateCita)
 citaRouter.delete('/api/cita/deleteCita', deleteCita)
 citaRouter.put('/api/cita/verifyCita', verifyCita)
 
-//workersRouter.put('/api/workers/updateHorario',updateHorario);
-//Exportar enrutador
 module.exports = citaRouter

@@ -1,6 +1,5 @@
 const usuario = require('../../models/users.model')
 const citaModel = require('../../models/cita.model')
-const tolkien = require('../../models/deviceToken.model.js')
 const workerModel = require('../../models/worker.model')
 const jwt = require('jsonwebtoken')
 var AWS = require('aws-sdk')

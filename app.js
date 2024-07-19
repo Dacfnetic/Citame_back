@@ -9,12 +9,9 @@ require('dotenv').config();
 //Importación de enrutadores
 const usersRouter = require('./src/routes/users/users.router.js')
 const businessRouter = require('./src/routes/business/business.router.js')
-const workersRouter = require('./src/routes/workers/worker.router.js')
-const servicesRouter = require('./src/routes/services/services.router.js')
 //const imgRouter = require('./src/routes/images/img.router.js')
 const notificationRouter = require('./src/routes/notification/notification.router.js')
 const citaRouter = require('./src/routes/citas/cita.router.js')
-const storageRouter = require('./src/routes/storage/storage.router.js');
 
 //Creación de aplicación express
 const app = express();
@@ -29,12 +26,9 @@ app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }))
 app.use(usersRouter)
 app.use(businessRouter)
-app.use(workersRouter)
 //app.use(imgRouter)
 app.use(notificationRouter)
-app.use(servicesRouter)
 app.use(citaRouter)
-app.use(storageRouter);
 
 //Exportación de aplicación express
 module.exports = app
