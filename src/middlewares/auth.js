@@ -17,12 +17,11 @@ const authMiddleWare = async (req, res, next) => {
          console.log(token);*/
 
          const token = req.headers.authorization;
-        const dataToken = await verifyToken(token);
-           console.log(dataToken);
-        if(!dataToken._id){
-        return handleHttpError(res, "ERROR ID TOKEN");
-         
-        }
+         const dataToken = await verifyToken(token);
+         console.log(dataToken);
+         if(!dataToken._id){
+            return handleHttpError(res, "ERROR ID TOKEN");
+         }
         
         const userFound = await usuario.findById({_id:dataToken._id});
         req.user = userFound;

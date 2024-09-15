@@ -37,20 +37,11 @@ async function postCita(req, res) {
   contadorDePostCita++;
   console.log('postCita' + contadorDePostCita);
   try {
-    const token = req.headers['x-access-token'] //Buscar en los headers que me tienes que mandar, se tiene que llamar asi para que la reciba aca
-
-    if (!token) {
-      return res.status(401).json({
-        auth: false,
-        message: 'No token',
-      })
-    }
-    //Una vez exista el JWT lo decodifica
-    const decoded = jwt.verify(token, config.jwtSecret) //Verifico en base al token
-
+   
+    const decoded = req.user._doc._id;
     const cita = req.body.cita
     const dateCreated = new citaModel({
-      creadaBy: decoded.idUser,
+      creadaBy: decoded,
       recibidaPor: req.body.idWorker,
       //descripcionCita: req.body.descripcionCita,
       citaHorario: cita,
@@ -60,7 +51,7 @@ async function postCita(req, res) {
 
     const trabajador = await workerModel.findById(req.body.idWorker);
     const citado = await usuario.findById(trabajador.id);
-    const user = await usuario.findById(decoded.idUser);
+    const user = await usuario.findById(decoded);
 
     //Manipular agenda con horario cita y devolver horario disponible
 
@@ -80,6 +71,8 @@ async function postCita(req, res) {
         $set: { horarioDisponible: agenda },
       })
 
+
+      /*
       await tolkien.findOne({ token: citado.deviceTokens[0] }).then(async (docs) => {
         if (docs != null) {
 
@@ -98,7 +91,7 @@ async function postCita(req, res) {
 
 
         }
-      });
+      });*/
 
 
       return res.status(201).send('Todo ok')

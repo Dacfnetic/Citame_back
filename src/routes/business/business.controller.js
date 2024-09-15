@@ -80,7 +80,7 @@ const postBusiness = async(req, res)=> {
       imgPath: `${PUBLIC_URL}/${file.filename}`,
       latitude: latitude,
       longitude: longitude,
-      servicios: servicios,
+      servicios: [],
       workers: [],
     })
 
@@ -125,74 +125,108 @@ const saveChangesFromBusiness = async (req, res) =>{
   const {/*requestedServices, requestedWorkers*/} = req.body;
 
   let previousService = busi._doc.servicios //Servicios existentes
+  let nombreDeServicios = []
   let listaServices = []
-  listaServices = JSON.parse(JSON.stringify(previousService))
+
+  for (let i = 0; i < previousService.length; i++) {
+    const negocioExistente = await services.findById(previousService[i])
+    if(negocioExistente != null){
+      nombreDeServicios.push(negocioExistente.nombreServicio);
+    }
+  }
+
+  for (let i = 0; i < previousService.length; i++) {
+    const negocioExistente = await services.findById(previousService[i])
+    if(negocioExistente != null){
+      listaServices.push(negocioExistente);
+    }
+  }
+  
   let requestedServices = JSON.parse(req.body.requestedServices)
 
-  const nombresDeServiciosAntiguos = await listaServices.map(async (service) => {
-    let servicio = await services.findById(service)
-    return servicio.nombreServicio
+  const newServicesToInsert = await requestedServices.map((service) => {
+    let nuevo = new services({
+      nombreServicio: service.nombreServicio,
+      businessCreatedBy: busi._doc._id,
+      precio: service.precio,
+      imgPath: service.imgPath,
+      descripcion: service.descripcion,
+      duracion: service.duracion,
+      time: service.time,
+    })
+    return nuevo
   })
 
-  const newServicesToInsert = await requestedServices.map((service) => {
-    if (!nombresDeServiciosAntiguos.includes(service.nombreServicio)) {
-      let nuevo = new services({
-        nombreServicio: service.nombreServicio,
-        businessCreatedBy: busi._doc._id,
-        precio: service.precio,
-        imgPath: service.imgPath,
-        descripcion: service.descripcion,
-        duracion: service.duracion,
-        time: service.time,
-      })
-      return nuevo
-    }
-  })
+
   for (var serv of newServicesToInsert) {
-    listaServices.push(serv._id)
+    if(!nombreDeServicios.includes(serv.nombreServicio)){
+      listaServices.push(serv);
+    }
+    
   }
   const newServices = await services.insertMany(newServicesToInsert)
 
    //Update Workers
+   let requestedWorkers = JSON.parse(req.body.requestedWorkers);
+
+   for (let worker of requestedWorkers) {
+    const usuarioDelTrabajador = await usuario.findOne({ emailUser: worker.email });
+    let horasQueVaATrabajarElEsclavo = new Agenda()
+    horasQueVaATrabajarElEsclavo.construirHorarioInicial(JSON.parse(worker.horario))
+    const newWorker = new workerModel({
+      idDeUsuario: usuarioDelTrabajador._doc._id,
+      workwith: busi._doc._id,
+      name: worker.name,
+      email: worker.email,
+      salary: worker.salary,
+      imgPath: '',
+      //horario: worker.horario,
+      horarioDisponible: horasQueVaATrabajarElEsclavo,
+      status: worker.status,
+      puesto: worker.puesto,
+      celular: worker.celular,
+    })
+
+   }
+
+
+   
    let previousWorker = busi._doc.workers //Trabajadores existentes
    let listaWorkers = []
    listaWorkers = JSON.parse(JSON.stringify(previousWorker))
    let nuevoWorker = []
-   let requestedWorkers = JSON.parse(req.body.requestedWorkers)
+   requestedWorkers = JSON.parse(req.body.requestedWorkers)
    let contador = 0
+   let emailDeTrabajadoresAntiguos = []
+   for(let i = 0; i < listaWorkers.length; i++){
+    const trabajadorAntiguo = await workerModel.findById(listaWorkers[i]);
+    emailDeTrabajadoresAntiguos.push(trabajadorAntiguo.email);
+   }
  
-   const emailDeTrabajadoresAntiguos = listaWorkers.map(async (worker) => {
-     let trabajador = await workerModel.findById(worker)
-     return trabajador.email
-   })
  
    for (let worker of requestedWorkers) {
      await usuario.findOne({ emailUser: worker.email }).then(async (docs) => {
        if (docs != null) {
          if (!emailDeTrabajadoresAntiguos.includes(worker.email)) {
            let horasQueVaATrabajarElEsclavo = new Agenda()
- 
+           const usuarioDelTrabajador = await usuario.findOne({ emailUser: worker.email });
            horasQueVaATrabajarElEsclavo.construirHorarioInicial(JSON.parse(worker.horario))
  
            const newWorker = new workerModel({
-             id: docs._id,
-             workwith: busi._doc._id,
-             name: worker.name,
-             email: worker.email,
-             salary: worker.salary,
-             //horario: worker.horario,
-             horarioDisponible: horasQueVaATrabajarElEsclavo,
-             status: worker.status,
-             puesto: worker.puesto,
-             celular: worker.celular,
-           })
+            idDeUsuario: usuarioDelTrabajador._doc._id,
+            workwith: busi._doc._id,
+            name: worker.name,
+            email: worker.email,
+            salary: worker.salary,
+            imgPath: busi._doc.imgPath,
+            //horario: worker.horario,
+            horarioDisponible: horasQueVaATrabajarElEsclavo,
+            status: worker.status,
+            puesto: worker.puesto,
+            celular: worker.celular,
+          })
            await newWorker.save()
-           let hola = new ImageService()
-           await hola.uploadImage({
-             buffer: req.files.imagen[contador],
-             id: newWorker._id,
-             destiny: 'worker',
-           })
+    
            contador++
            //const idCool = newWorker._id.toString();
            listaWorkers.push(newWorker._id)
@@ -201,12 +235,11 @@ const saveChangesFromBusiness = async (req, res) =>{
      })
    }
 
-
   //Update horario
   let modificaciones = {
     horario: req.body.horario,
     servicios: listaServices,
-   // workers: listaWorkers,
+    workers: listaWorkers,
   }
 
   //Actualizar negocio

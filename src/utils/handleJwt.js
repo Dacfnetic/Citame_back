@@ -8,7 +8,7 @@ const tokenSign = async (createdUser) =>{
       },
    SECRET_KEY,
   {
-    expiresIn: "60m"
+    expiresIn: "10080m"
   }
    
 )

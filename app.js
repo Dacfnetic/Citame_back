@@ -12,6 +12,8 @@ const businessRouter = require('./src/routes/business/business.router.js')
 //const imgRouter = require('./src/routes/images/img.router.js')
 const notificationRouter = require('./src/routes/notification/notification.router.js')
 const citaRouter = require('./src/routes/citas/cita.router.js')
+const servicesController = require('./src/routes/services/services.router.js')
+const workersRouter = require('./src/routes/workers/worker.router.js')
 
 //Creación de aplicación express
 const app = express();
@@ -26,6 +28,8 @@ app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }))
 app.use(usersRouter)
 app.use(businessRouter)
+app.use(servicesController)
+app.use(workersRouter)
 //app.use(imgRouter)
 app.use(notificationRouter)
 app.use(citaRouter)
