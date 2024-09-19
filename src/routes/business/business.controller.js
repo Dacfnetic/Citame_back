@@ -119,7 +119,7 @@ const saveChangesFromBusiness = async (req, res) =>{
   //Update Services
   contadorDeSaveChangesFromBusiness++
   console.log('saveChangesFromBusiness: ' + contadorDeSaveChangesFromBusiness)
-
+  const {files, user, body} = req;
   const busi = await business.findById(req.body.businessId)
   const {servicios, workers, workersIds} = busi._doc;
   const {/*requestedServices, requestedWorkers*/} = req.body;
@@ -169,26 +169,6 @@ const saveChangesFromBusiness = async (req, res) =>{
    //Update Workers
    let requestedWorkers = JSON.parse(req.body.requestedWorkers);
 
-   for (let worker of requestedWorkers) {
-    const usuarioDelTrabajador = await usuario.findOne({ emailUser: worker.email });
-    let horasQueVaATrabajarElEsclavo = new Agenda()
-    horasQueVaATrabajarElEsclavo.construirHorarioInicial(JSON.parse(worker.horario))
-    const newWorker = new workerModel({
-      idDeUsuario: usuarioDelTrabajador._doc._id,
-      workwith: busi._doc._id,
-      name: worker.name,
-      email: worker.email,
-      salary: worker.salary,
-      imgPath: '',
-      //horario: worker.horario,
-      horarioDisponible: horasQueVaATrabajarElEsclavo,
-      status: worker.status,
-      puesto: worker.puesto,
-      celular: worker.celular,
-    })
-
-   }
-
 
    
    let previousWorker = busi._doc.workers //Trabajadores existentes
@@ -203,7 +183,7 @@ const saveChangesFromBusiness = async (req, res) =>{
     emailDeTrabajadoresAntiguos.push(trabajadorAntiguo.email);
    }
  
- 
+
    for (let worker of requestedWorkers) {
      await usuario.findOne({ emailUser: worker.email }).then(async (docs) => {
        if (docs != null) {
@@ -218,7 +198,7 @@ const saveChangesFromBusiness = async (req, res) =>{
             name: worker.name,
             email: worker.email,
             salary: worker.salary,
-            imgPath: busi._doc.imgPath,
+            imgPath: `${PUBLIC_URL}/${files.imagen[contador].filename}`,
             //horario: worker.horario,
             horarioDisponible: horasQueVaATrabajarElEsclavo,
             status: worker.status,
